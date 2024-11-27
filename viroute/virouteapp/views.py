@@ -82,11 +82,7 @@ def signup(request):
                 }
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'GET':
-        users = User.objects.all()  
-        serializer = UserSerializer(users, many=True)  
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 #Ticket list
