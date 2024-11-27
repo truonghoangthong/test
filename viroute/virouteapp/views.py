@@ -64,40 +64,44 @@ class UserLoginView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 #Sign up
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 def signup(request):
-    if request.method == 'GET':
-        # Trả về danh sách tất cả người dùng
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    elif request.method == 'POST':
-        try:
-            # Kiểm tra và parse dữ liệu JSON
+    try:
+        # Kiểm tra header Content-Type
+        if request.content_type == 'application/json':
             data = request.data
-            print("Received data:", data)  # Log để debug
-
-            serializer = UserSerializer(data=data)
-            if serializer.is_valid():
-                user = serializer.save()
-                return Response({
-                    "message": "User created successfully",
-                    "user": {
-                        "userID": user.userID,
-                        "fullName": user.fullName,
-                        "userEmail": user.userEmail,
-                        "balance": str(user.balance)
-                    }
-                }, status=status.HTTP_201_CREATED)
+        else:
+            # Parse JSON từ _content nếu không phải application/json
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            # Bắt lỗi khi parse JSON hoặc các lỗi khác
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        print("Parsed data:", data)  # Log kiểm tra dữ liệu
+
+        serializer = UserSerializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()
             return Response({
-                "error": "Invalid request data or server error",
-                "details": str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+                "message": "User created successfully",
+                "user": {
+                    "userID": user.userID,
+                    "fullName": user.fullName,
+                    "userEmail": user.userEmail,
+                    "balance": str(user.balance)
+                }
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 #Ticket list
