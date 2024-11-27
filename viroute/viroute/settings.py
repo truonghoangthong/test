@@ -143,5 +143,7 @@ SOCIALACCOUNT_PROVIDERS = {
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOW_HEADERS = [
+    'content-type', 'x-csrftoken', 'Authorization', 
+]
 # Additional configurations (you can adjust these according to your needs)
