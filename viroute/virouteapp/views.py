@@ -64,6 +64,7 @@ class UserLoginView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 #Sign up
+@csrf_exempt
 @api_view(['POST'])
 def signup(request):
     print("Request Data:", request.data)
