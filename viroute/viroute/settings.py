@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -86,19 +88,14 @@ WSGI_APPLICATION = 'viroute.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',  
-        'NAME': os.getenv('DB_NAME', 'railway'),  
-        'USER': os.getenv('DB_USER', 'root'),  
-        'PASSWORD': os.getenv('DB_PASSWORD', 'NUrjwwbhLgunSnbpwQfEcMyGFtGFtaqy'),  
-        'HOST': os.getenv('DB_HOST', 'mysql.railway.internal'),  
-        'PORT': os.getenv('DB_PORT', '3306'),  
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
+    'default': dj_database_url.config(
+        default='mysql://root:NUrjwwbhLgunSnbpwQfEcMyGFtGFtaqy@autorack.proxy.rlwy.net:57334/railway'
+    )
 }
+
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
