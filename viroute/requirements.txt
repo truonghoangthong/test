@@ -132,6 +132,7 @@ pyftdi==0.55.4
 pygame==2.5.2
 Pygments==2.18.0
 pymongo==4.10.1
+PyMySQL==1.1.1
 pyOpenSSL==24.2.1
 pyparsing==3.1.1
 pyserial==3.5
