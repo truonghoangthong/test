@@ -64,23 +64,40 @@ class UserLoginView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 #Sign up
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def signup(request):
-    if request.method == 'POST':
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                "message": "User created successfully",
-                "user": {
-                    "userID": user.userID,
-                    "fullName": user.fullName,
-                    "userEmail": user.userEmail,
-                    "balance": str(user.balance)
-                }
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        # Trả về danh sách tất cả người dùng
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    elif request.method == 'POST':
+        try:
+            # Kiểm tra và parse dữ liệu JSON
+            data = request.data
+            print("Received data:", data)  # Log để debug
+
+            serializer = UserSerializer(data=data)
+            if serializer.is_valid():
+                user = serializer.save()
+                return Response({
+                    "message": "User created successfully",
+                    "user": {
+                        "userID": user.userID,
+                        "fullName": user.fullName,
+                        "userEmail": user.userEmail,
+                        "balance": str(user.balance)
+                    }
+                }, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # Bắt lỗi khi parse JSON hoặc các lỗi khác
+            return Response({
+                "error": "Invalid request data or server error",
+                "details": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 #Ticket list
