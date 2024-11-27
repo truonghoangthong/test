@@ -66,8 +66,6 @@ class UserLoginView(APIView):
 #Sign up
 @api_view(['POST'])
 def signup(request):
-    data = json.loads(request.body)
-    print("Request Data:", request.data)
     if request.method == 'POST':
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
