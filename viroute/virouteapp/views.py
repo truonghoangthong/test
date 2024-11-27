@@ -45,33 +45,52 @@ def get_route(request):
 #Login
 class UserLoginView(APIView):
     def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            return Response({
-                "message": "Login successful",
-                "user": {
-                    "userID": user.userID,
-                    "fullName": user.fullName,
-                    "userEmail": user.userEmail,
-                    "balance": str(user.balance)  
-                }
-            }, status=status.HTTP_200_OK)
+        try:
+            if request.content_type == 'application/json':
+                data = request.data
+            else:
+                raw_body = request.POST.get('_content')
+                if raw_body:
+                    data = json.loads(raw_body)
+                else:
+                    return Response(
+                        {"error": "Invalid content-type or missing data."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
-        return Response({
-            "message": "login failed",
-            "errors": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            print("Parsed data:", data)  
+
+            serializer = UserLoginSerializer(data=data)
+            if serializer.is_valid():
+                user = serializer.validated_data['user']
+                return Response({
+                    "message": "Login successful",
+                    "user": {
+                        "userID": user.userID,
+                        "fullName": user.fullName,
+                        "userEmail": user.userEmail,
+                        "balance": str(user.balance)
+                    }
+                }, status=status.HTTP_200_OK)
+
+            return Response({
+                "message": "Login failed",
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": "An error occurred", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 #Sign up
 @api_view(['POST'])
 def signup(request):
     try:
-        # Kiểm tra header Content-Type
         if request.content_type == 'application/json':
             data = request.data
         else:
-            # Parse JSON từ _content nếu không phải application/json
             raw_body = request.POST.get('_content')
             if raw_body:
                 data = json.loads(raw_body)
@@ -81,7 +100,7 @@ def signup(request):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        print("Parsed data:", data)  # Log kiểm tra dữ liệu
+        print("Parsed data:", data)  
 
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
