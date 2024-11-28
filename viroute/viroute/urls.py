@@ -32,6 +32,7 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('tickets/', views.ticketList, name='tickets'),
     path('get_image/<str:image_name>/', views.get_image_by_name, name='get_image_by_name'),
+    path('update_user/<str:user_id>', views.update_user_info, name='update_user_info'),
 ]
 
 if settings.DEBUG:
