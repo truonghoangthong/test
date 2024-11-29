@@ -189,5 +189,8 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'banhmingon90@gmail.com'
 EMAIL_HOST_PASSWORD = 'chithich1nguoi'
 
-CSRF_TRUSTED_ORIGINS = ['*']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+]
+
 
