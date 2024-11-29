@@ -19,6 +19,8 @@ from virouteapp.views import UserLoginView
 from virouteapp import views
 from django.conf.urls.static import static
 from django.conf import settings
+from django.contrib.auth import views as auth_views
+
 
 
 
@@ -33,6 +35,8 @@ urlpatterns = [
     path('tickets/', views.ticketList, name='tickets'),
     path('get_image/<str:image_name>/', views.get_image_by_name, name='get_image_by_name'),
     path('update_user/<str:user_id>', views.update_user_info, name='update_user_info'),
+    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'), #  user enters their email to request a password reset.
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),# user clicks the link in their email and enters a new password.
 ]
 
 if settings.DEBUG:
