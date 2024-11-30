@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-9)pym!8*i7k=!ep6rx0d^$p@!fnzf*1($8ub10&(65h4(h!*7n
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # Cho phép tất cả các host
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -116,9 +116,11 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # Cho phép tất cả các origin
-
-CSRF_TRUSTED_ORIGINS = ['*']  # Cho phép tất cả các origins cho CSRF
+CORS_ALLOW_ALL_ORIGINS = False  # Không cho phép tất cả các origin, chỉ cho phép những origin được chỉ định
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',  # Địa chỉ của frontend
+    'https://test-production-2db4.up.railway.app',  # Địa chỉ của backend
+]
 
 CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookies và thông tin xác thực
 
@@ -133,5 +135,11 @@ EMAIL_HOST_PASSWORD = 'chithich1nguoi'
 EMAIL_USE_TLS = True  # Chắc chắn bật TLS để mã hóa
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-CSRF_COOKIE_SAMESITE = 'None'  # Để hỗ trợ cross-site request
-CSRF_COOKIE_SECURE = True  # Đảm bảo cookie CSRF được gửi qua HTTPS khi triển khai trên https
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',  # Địa chỉ frontend
+    'https://test-production-2db4.up.railway.app',  # Địa chỉ backend
+]
+
+CSRF_COOKIE_SAMESITE = 'None'  # Để hỗ trợ cross-site request (cần thiết cho frontend và backend khác domain)
+CSRF_COOKIE_SECURE = True  # Đảm bảo cookie CSRF được gửi qua HTTPS (bật khi triển khai trên https)
