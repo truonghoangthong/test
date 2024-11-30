@@ -1,5 +1,3 @@
-# settings.py
-
 from pathlib import Path
 import os
 import dj_database_url
@@ -118,12 +116,13 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-CORS_ALLOW_ALL_ORIGINS = False  # Không cho phép tất cả các origin
+CORS_ALLOW_ALL_ORIGINS = False  # Không cho phép tất cả các origin, chỉ cho phép những origin được chỉ định
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Chỉ định frontend
+    'http://localhost:5173',  # Địa chỉ của frontend
+    'https://test-production-2db4.up.railway.app',  # Địa chỉ của backend
 ]
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookies và thông tin xác thực
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -131,11 +130,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = 'lelouchzero093@gmail.com'
+EMAIL_HOST_PASSWORD = 'chithich1nguoi'
+EMAIL_USE_TLS = True  # Chắc chắn bật TLS để mã hóa
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
+    'http://localhost:5173',  # Địa chỉ frontend
+    'https://test-production-2db4.up.railway.app',  # Địa chỉ backend
 ]
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+
+CSRF_COOKIE_SAMESITE = 'None'  # Để hỗ trợ cross-site request (cần thiết cho frontend và backend khác domain)
+CSRF_COOKIE_SECURE = True  # Đảm bảo cookie CSRF được gửi qua HTTPS (bật khi triển khai trên https)
