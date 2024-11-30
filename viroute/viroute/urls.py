@@ -35,8 +35,8 @@ urlpatterns = [
     path('tickets/', views.ticketList, name='tickets'),
     path('get_image/<str:image_name>/', views.get_image_by_name, name='get_image_by_name'),
     path('update_user/<str:user_id>', views.update_user_info, name='update_user_info'),
-    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'), #  user enters their email to request a password reset.
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),# user clicks the link in their email and enters a new password.
+    path('get-csrf-token/', views.get_csrf_token, name='get_csrf_token'),
+    path('password_reset/', views.password_reset, name='password_reset'),
 ]
 
 if settings.DEBUG:
