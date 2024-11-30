@@ -192,5 +192,5 @@ EMAIL_HOST_PASSWORD = 'chithich1nguoi'
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
 ]
-
-
+CSRF_COOKIE_SAMESITE = 'None'  
+CSRF_COOKIE_SECURE = True
