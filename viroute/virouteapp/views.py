@@ -17,6 +17,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 import yagmail
+from email_backends.yagmail_backend import send_reset_email
 
 
 # Get route/map API
@@ -158,22 +159,19 @@ def forgot_password(request):
         if not email:
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Kiểm tra xem email có tồn tại trong database không
         try:
             user = User.objects.get(userEmail=email)
         except User.DoesNotExist:
             return Response({"error": "Email not found."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Tạo token và reset link
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(user.pk.encode())
         reset_link = f"http://localhost:4000/reclaimpass/{uid}/{token}/"
 
-        # Use Yagmail to send email
-        yag = yagmail.SMTP(user='lelouchzero093@gmail.com', password='yoag nlig okku bryv')
-        yag.send(
-            to=email,
-            subject="Reset Password",
-            contents=f"Click the link to reset your password: {reset_link}"
-        )
+        # Gọi hàm gửi email từ yagmail_backend
+        send_reset_email(email, reset_link)
 
         return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
 
@@ -182,6 +180,7 @@ def forgot_password(request):
             {"error": "An error occurred", "details": str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
+
 
 
 # Reset password
