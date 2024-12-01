@@ -1,14 +1,8 @@
 import yagmail
-from django.core.mail.backends.base import BaseEmailBackend
-
-import yagmail
-from django.conf import settings
-
-# Tạo một instance của Yagmail SMTP một lần duy nhất
-yag = yagmail.SMTP(user='lelouchzero093@gmail.com', password='yoag nlig okku bryv')
 
 def send_reset_email(email, reset_link):
     try:
+        yag = yagmail.SMTP(user='your-email@gmail.com', password='your-password')
         yag.send(
             to=email,
             subject="Reset Password",

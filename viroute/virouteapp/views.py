@@ -149,7 +149,6 @@ import yagmail
 
 # Forgot password
 @api_view(['POST'])
-@csrf_exempt
 def forgot_password(request):
     try:
         data = request.data  # Expecting JSON body
@@ -185,7 +184,6 @@ def forgot_password(request):
 
 # Reset password
 @api_view(['PUT'])
-@csrf_exempt
 def reset_password(request, uidb64, token):
     try:
         data = request.data  # Expecting JSON body

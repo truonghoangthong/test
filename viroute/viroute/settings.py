@@ -171,8 +171,8 @@ CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True  
 
 # Email settings using Yagmail
-EMAIL_BACKEND = 'virouteapp.email_backends.yagmail_backend.YagmailBackend'  
-EMAIL_HOST = 'smtp.gmail.com'  
+EMAIL_BACKEND = 'virouteapp.email_backends.yagmail_backend.YagmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Optional, this might be needed if using SMTP directly
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
