@@ -160,7 +160,7 @@ def forgot_password(request):
 
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(user.pk.encode())
-        reset_link = f"http://localhost:5173/reclaimpass/{uid}/{token}/"
+        reset_link = f"http://localhost:4000/reclaimpass/{uid}/{token}/"
 
         send_mail(
             "Reset Password",
