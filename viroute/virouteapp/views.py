@@ -168,7 +168,7 @@ def forgot_password(request):
         reset_link = f"http://localhost:4000/reclaimpass/{uid}/{token}/"
 
         # Use Yagmail to send email
-        yag = yagmail.SMTP(user=settings.EMAIL_HOST_USER, password=settings.EMAIL_HOST_PASSWORD)
+        yag = yagmail.SMTP(user='lelouchzero093@gmail.com', password='yoag nlig okku bryv')
         yag.send(
             to=email,
             subject="Reset Password",
