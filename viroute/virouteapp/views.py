@@ -159,7 +159,7 @@ def forgot_password(request):
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(userEmail=email)
         except User.DoesNotExist:
             return Response({"error": "Email not found."}, status=status.HTTP_400_BAD_REQUEST)
 
