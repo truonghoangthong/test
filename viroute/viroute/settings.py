@@ -161,18 +161,20 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 LOGIN_REDIRECT_URL = "/" 
 LOGOUT_REDIRECT_URL = "/"
 
+
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
-# Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587 
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'lelouchzero093@gmail.com'
-EMAIL_HOST_PASSWORD = 'fdgi ixpk pxyh bofa'
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [f'http://localhost:{port}' for port in range(3000, 8000)]  
 CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True  
+
+# Email settings using Yagmail
+EMAIL_BACKEND = 'myapp.email_backend.YagmailBackend'  # Đường dẫn đến file backend của bạn
+EMAIL_HOST_USER = 'lelouchzero093@gmail.com'  # Địa chỉ email của bạn
+EMAIL_HOST_PASSWORD = 'yoag nlig okku bryv'  # Mật khẩu ứng dụng Gmail
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER 
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+

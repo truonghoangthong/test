@@ -16,6 +16,8 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+import yagmail
+
 
 # Get route/map API
 def get_route(request):
@@ -142,6 +144,9 @@ def update_user_info(request, user_id):
 
 
 # Forgot password
+import yagmail
+
+# Forgot password
 @api_view(['POST'])
 @csrf_exempt
 def forgot_password(request):
@@ -162,12 +167,12 @@ def forgot_password(request):
         uid = urlsafe_base64_encode(user.pk.encode())
         reset_link = f"http://localhost:4000/reclaimpass/{uid}/{token}/"
 
-        send_mail(
-            "Reset Password",
-            f"Click the link to reset your password: {reset_link}",
-            settings.EMAIL_HOST_USER,
-            [email],
-            fail_silently=False,
+        # Use Yagmail to send email
+        yag = yagmail.SMTP(user=settings.EMAIL_HOST_USER, password=settings.EMAIL_HOST_PASSWORD)
+        yag.send(
+            to=email,
+            subject="Reset Password",
+            contents=f"Click the link to reset your password: {reset_link}"
         )
 
         return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
