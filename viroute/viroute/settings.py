@@ -171,8 +171,8 @@ CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True  
 
 # Email settings using Yagmail
-EMAIL_BACKEND = 'virouteapp.email_backends.yagmail_backend.YagmailBackend'  # Đảm bảo thay 'yourapp' bằng tên ứng dụng thực tế của bạn
-EMAIL_HOST = 'smtp.gmail.com'  # Ví dụ, nếu bạn dùng Gmail
+EMAIL_BACKEND = 'virouteapp.email_backends.yagmail_backend.YagmailBackend'  
+EMAIL_HOST = 'smtp.gmail.com'  
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
