@@ -2,7 +2,7 @@ import yagmail
 
 def send_reset_email(email, reset_link):
     try:
-        yag = yagmail.SMTP(user='your-email@gmail.com', password='your-password')
+        yag = yagmail.SMTP(user='lelouchzero093@gmail.com', password='yoag nlig okku bryv')
         yag.send(
             to=email,
             subject="Reset Password",

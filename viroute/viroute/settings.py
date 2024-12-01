@@ -171,10 +171,12 @@ CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True  
 
 # Email settings using Yagmail
-EMAIL_BACKEND = 'virouteapp.yagmail_backend.YagmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Optional, this might be needed if using SMTP directly
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'lelouchzero093@gmail.com'
+EMAIL_HOST_PASSWORD = 'yoag nlig okku bryv'  # Hoặc sử dụng app password nếu bật 2FA
 
 
 
