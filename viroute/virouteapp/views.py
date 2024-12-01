@@ -17,7 +17,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 import yagmail
-from email_backends.yagmail_backend import send_reset_email
+from .yagmail_backend import send_reset_email
 
 
 # Get route/map API
