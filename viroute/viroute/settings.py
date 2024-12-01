@@ -166,12 +166,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.elasticemail.com'
-EMAIL_PORT = 2525
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587 
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'banhmingon90@gmail.com'
-EMAIL_HOST_PASSWORD = '40CD4282891E639A23B350FC053B14828829'
-DEFAULT_FROM_EMAIL = 'banhmingon90@gmail.com'
+EMAIL_HOST_USER = 'lelouchzero093@gmail.com'
+EMAIL_HOST_PASSWORD = 'fdgi ixpk pxyh bofa'
 
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = [f'http://localhost:{port}' for port in range(3000, 8000)]  
