@@ -24,6 +24,8 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 
@@ -184,7 +186,7 @@ def update_user_info(request, user_id):
         )
         
 @api_view(['POST'])
-@ensure_csrf_cookie
+@csrf_exempt
 def forgot_password(request):
     try: # from here
         if request.content_type != 'application/json':
@@ -233,7 +235,7 @@ def forgot_password(request):
 
 
 @api_view(['PUT'])
-@ensure_csrf_cookie
+@csrf_exempt
 def reset_password(request, uidb64, token):
     try:# from here
         if request.content_type != 'application/json':
