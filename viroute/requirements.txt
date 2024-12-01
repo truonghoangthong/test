@@ -188,4 +188,5 @@ whitenoise==6.8.2
 yarg==0.1.9
 zope.interface==7.0.3
 yagmail==0.15.293
+sentry-sdk==2.19.0
 

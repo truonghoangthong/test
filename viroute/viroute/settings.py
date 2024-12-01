@@ -13,6 +13,20 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="https://9612a7d03113866132e61b1dca0fdf0b@o4508395567972352.ingest.de.sentry.io/4508395570331728",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    _experiments={
+        # Set continuous_profiling_auto_start to True
+        # to automatically start the profiler on when
+        # possible.
+        "continuous_profiling_auto_start": True,
+    },
+)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -171,7 +185,7 @@ CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True  
 
 # Email settings using Yagmail
-EMAIL_BACKEND = 'virouteapp.yagmail_backend.YagmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
