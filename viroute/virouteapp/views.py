@@ -1,66 +1,42 @@
 from django.shortcuts import render
+from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
-
-# Authen API
 import json
-from .models import User
-from .serializers import UserLoginSerializer
+from .models import User, Ticket, Image
+from .serializers import UserLoginSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from .serializers import UserSerializer
 from rest_framework.decorators import api_view
-from .models import Image
 from django.shortcuts import get_object_or_404
 import os
-
-# Ticket list
-from .models import Ticket
-
-# Email
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 
-
-
-
-#Get route/ map API
+# Get route/map API
 def get_route(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
     url = f"https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62481c184721ac24419cbc62a1f87c43d9dc&start={start}&end={end}"
-# syntax: &start = {start} & end = {end}
-# test location: &start=105.883999,21.049659&end=105.855546,21.024705
-    respond = requests.get(url) # Request API from this
+    response = requests.get(url)
 
-    if respond.status_code == 200:
-        return JsonResponse(respond.json()) #Return json data
+    if response.status_code == 200:
+        return JsonResponse(response.json())  # Return JSON data
     else:
-        return JsonResponse({'error': respond.status_code})
+        return JsonResponse({'error': response.status_code})
 
 
-#Login
+# Login
 class UserLoginView(APIView):
     def post(self, request):
-        try: # from here
-            if request.content_type == 'application/json':
-                data = request.data
-            else:
-                raw_body = request.POST.get('_content')
-                if raw_body:
-                    data = json.loads(raw_body)
-                else:
-                    return Response(
-                        {"error": "Invalid content-type or missing data."},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )  # to here. Warning: cấm xóa,cấm sửa chó nào đụng t chặt tay. 
+        try:
+            data = request.data  # Expecting JSON body from the client
 
-            print("Parsed data:", data)  
+            print("Parsed data:", data)
 
             serializer = UserLoginSerializer(data=data)
             if serializer.is_valid():
@@ -86,23 +62,14 @@ class UserLoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-#Sign up
+
+# Sign up
 @api_view(['POST'])
 def signup(request):
-    try: # from here
-        if request.content_type == 'application/json':
-            data = request.data
-        else:
-            raw_body = request.POST.get('_content')
-            if raw_body:
-                data = json.loads(raw_body)
-            else:
-                return Response(
-                    {"error": "Invalid content-type or missing data."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )  # to here. Warning: cấm xóa,cấm sửa chó nào đụng t chặt tay. 
+    try:
+        data = request.data  # Expecting JSON body
 
-        print("Parsed data:", data)  
+        print("Parsed data:", data)
 
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
@@ -125,27 +92,29 @@ def signup(request):
         )
 
 
-#Ticket list
-def ticketList(request):
+# Ticket list
+def ticket_list(request):
     tickets = Ticket.objects.all()
     return render(request, 'virouteapp/ticket_list.html', {'tickets': tickets})
 
-#Image 
+
+# Get image by name
 def get_image_by_name(request, image_name):
     image = get_object_or_404(Image, image_name=image_name)
-    
+
     if not image.image_path:
         return HttpResponse("Image does not exist", status=404)
-    
-    image_path = os.path.join(settings.MEDIA_ROOT, 'images', image.image_path.name)
 
+    image_path = os.path.join(settings.MEDIA_ROOT, 'images', image.image_path.name)
 
     with open(image_path, 'rb') as img:
         return HttpResponse(img.read(), content_type="image/png")
-    
+
+
+# Update user information
 @api_view(['PUT'])
 def update_user_info(request, user_id):
-    try:# from here
+    try:
         try:
             user = User.objects.get(userID=user_id)
         except User.DoesNotExist:
@@ -153,54 +122,32 @@ def update_user_info(request, user_id):
                 {"error": "User not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
-        if request.content_type == 'application/json':
-            data = request.data
-        else:
-            raw_body = request.POST.get('_content')
-            if raw_body:
-                data = json.loads(raw_body)
-            else:
-                return Response(
-                    {"error": "Invalid content-type or missing data."},
-                    status=status.HTTP_400_BAD_REQUEST
-                ) # to here. Warning: cấm xóa,cấm sửa chó nào đụng t chặt tay. 
+
+        data = request.data  # Expecting JSON body
+
         serializer = UserSerializer(user, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                {
-                    "message": "User updated successfully",
-                    "user": serializer.data
-                },
-                status=status.HTTP_200_OK
-            )
+            return Response({
+                "message": "User updated successfully",
+                "user": serializer.data
+            }, status=status.HTTP_200_OK)
         else:
-            return Response(
-                {"error": "Invalid data", "details": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Invalid data", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response(
             {"error": "An unexpected error occurred", "details": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-        
+
+
+# Forgot password
 @api_view(['POST'])
 @csrf_exempt
 def forgot_password(request):
-    try: # from here
-        if request.content_type != 'application/json':
-            data = request.data
+    try:
+        data = request.data  # Expecting JSON body
 
-        else:
-            raw_body = request.POST.get('_content')
-            if raw_body:
-                data = json.loads(raw_body)
-            else:
-                return Response(
-                    {"error": "Invalid content-type or missing data."},
-                    status=status.HTTP_400_BAD_REQUEST
-                ) # to here. Warning: cấm xóa,cấm sửa chó nào đụng t chặt tay. 
         email = data.get('email')
 
         if not email:
@@ -212,12 +159,11 @@ def forgot_password(request):
             return Response({"error": "Email not found."}, status=status.HTTP_400_BAD_REQUEST)
 
         token = default_token_generator.make_token(user)
-
         uid = urlsafe_base64_encode(user.pk.encode())
         reset_link = f"http://localhost:5173/reclaimpass/{uid}/{token}/"
 
         send_mail(
-            "Thằng scrum master ngu ngốc",
+            "Reset Password",
             f"Click the link to reset your password: {reset_link}",
             settings.EMAIL_HOST_USER,
             [email],
@@ -226,30 +172,19 @@ def forgot_password(request):
 
         return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
 
-    except Exception as e: 
-            return Response(
-                {"error": "An error occurred", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    except Exception as e:
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
-
+# Reset password
 @api_view(['PUT'])
 @csrf_exempt
 def reset_password(request, uidb64, token):
-    try:# from here
-        if request.content_type != 'application/json':
-            data = request.data
-
-        else:
-            raw_body = request.POST.get('_content')
-            if raw_body:
-                data = json.loads(raw_body)
-            else:
-                return Response(
-                    {"error": "Invalid content-type or missing data."},
-                    status=status.HTTP_400_BAD_REQUEST
-                ) # to here. Warning: cấm xóa,cấm sửa chó nào đụng t chặt tay. 
+    try:
+        data = request.data  # Expecting JSON body
 
         new_password = data.get('password')
 
@@ -270,7 +205,13 @@ def reset_password(request, uidb64, token):
 
         return Response({"message": "Password successfully updated."}, status=status.HTTP_200_OK)
     except Exception as e:
-            return Response(
-                {"error": "An error occurred", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+# View trả về CSRF token
+@api_view(['GET'])
+def get_csrf_token(request):
+    csrf_token = get_token(request)  # Lấy CSRF token từ middleware
+    return Response({'csrf_token': csrf_token})

@@ -1,42 +1,21 @@
-"""viroute URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
-from virouteapp.views import UserLoginView
+from virouteapp.views import UserLoginView, get_csrf_token  # Import view lấy CSRF token
 from virouteapp import views
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 
-
-
-
-
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-    #path ('', include('virouteapp.urls')),
-    # path('get_route', include('virouteapp.urls')), #whoever delete this is unable to be a human
-    path('api/login/', UserLoginView.as_view(), name='login'),
+    path('api/login/', views.UserLoginView.as_view(), name='login'),
     path('signup/', views.signup, name='signup'),
-    path('tickets/', views.ticketList, name='tickets'),
+    path('tickets/', views.ticket_list, name='tickets'),
     path('get_image/<str:image_name>/', views.get_image_by_name, name='get_image_by_name'),
-    path('update_user/<str:user_id>', views.update_user_info, name='update_user_info'),
-    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'), #  user enters their email to request a password reset.
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),# user clicks the link in their email and enters a new password.
+    path('update_user/<str:user_id>/', views.update_user_info, name='update_user_info'),
+    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('api/csrf_token/', views.get_csrf_token, name='csrf_token'),  # Route để lấy CSRF token
 ]
 
 if settings.DEBUG:
