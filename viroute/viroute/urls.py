@@ -5,9 +5,11 @@ from virouteapp import views
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.auth import views as auth_views
-
+def trigger_error(request):
+    division_by_zero = 1 / 0
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sentry-debug/', trigger_error),
     path('api/login/', views.UserLoginView.as_view(), name='login'),
     path('signup/', views.signup, name='signup'),
     path('tickets/', views.ticket_list, name='tickets'),
