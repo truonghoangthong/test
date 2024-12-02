@@ -150,7 +150,6 @@ def update_user_info(request, user_id):
         )
 
 
-# Forgot password
 def is_valid_email(email):
     try:
         validate_email(email)
@@ -158,21 +157,27 @@ def is_valid_email(email):
     except ValidationError:
         return False
 
+# Hàm gửi email reset mật khẩu
 def send_reset_email(email, reset_link):
     subject = "Password Reset"
     message = f"Click the link to reset your password: {reset_link}"
-    from_email = 'your_email@gmail.com'
+    from_email = 'lelouchzero093@gmail.com'  # Email gửi từ
 
     try:
-        # Use yagmail to send the reset email
-        yag = yagmail.SMTP(from_email, 'your_email_password')
-        yag.send(to=email, subject=subject, contents=message)
+        # Sử dụng send_mail của Django thay vì yagmail
+        send_mail(
+            subject,
+            message,
+            from_email,
+            [email],
+            fail_silently=False,
+        )
         logger.info(f"Password reset email sent to {email}")
     except Exception as e:
         logger.error(f"Failed to send email to {email}: {e}")
         raise Exception(f"Failed to send email: {str(e)}")
 
-# Forgot Password API (POST)
+# API Forgot Password (POST)
 @api_view(['POST'])
 def forgot_password(request):
     try:
@@ -182,25 +187,25 @@ def forgot_password(request):
         if not email:
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate the email format
+        # Kiểm tra định dạng email
         if not is_valid_email(email):
             return Response({"error": "Invalid email format."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the email exists
+        # Kiểm tra xem email có tồn tại trong hệ thống không
         try:
             user = User.objects.get(userEmail=email)
         except User.DoesNotExist:
             # Không gửi email nếu email không tồn tại
             return Response({"message": "If an account exists with this email, a reset link has been sent."}, 
-                             status=status.HTTP_200_OK)  # Trả lời thành công, nhưng không tiết lộ có hay không tài khoản
+                             status=status.HTTP_200_OK)  # Trả lời thành công mà không tiết lộ tài khoản
 
-        # Generate reset token and link
+        # Tạo token reset và link
         token_generator = CustomPasswordResetTokenGenerator()
         token = token_generator.make_token(user)
         uid = urlsafe_base64_encode(str(user.pk).encode())
         reset_link = f"http://localhost:5173/reclaimpass/{uid}/{token}/"
 
-        # Send the reset email
+        # Gửi email reset
         send_reset_email(user.userEmail, reset_link)
         logger.info(f"Password reset email sent to: {email}")
 
@@ -213,7 +218,7 @@ def forgot_password(request):
                          status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# Reset Password API (PUT)
+# API Reset Password (PUT)
 @api_view(['PUT'])
 def reset_password(request, uidb64, token):
     """
@@ -225,18 +230,18 @@ def reset_password(request, uidb64, token):
         return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        # Decode the UID and get the user
+        # Giải mã UID và lấy người dùng
         uid = urlsafe_base64_decode(uidb64).decode()
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, User.DoesNotExist):
         return Response({"error": "Invalid link or user not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    # Verify the token
+    # Kiểm tra token
     token_generator = CustomPasswordResetTokenGenerator()
     if not token_generator.check_token(user, token):
         return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Reset the password
+    # Cập nhật mật khẩu mới
     user.set_password(new_password)
     user.save()
 
@@ -251,7 +256,8 @@ def get_csrf_token(request):
 # Custom Password Reset Token Generator
 class CustomPasswordResetTokenGenerator(PasswordResetTokenGenerator):
     def _make_hash_value(self, user, timestamp):
-        # Use current timestamp instead of last_login
+        # Sử dụng thời gian hiện tại thay vì last_login
         login_timestamp = now()
         return f"{user.pk}-{login_timestamp}-{user.email}"
+
         
