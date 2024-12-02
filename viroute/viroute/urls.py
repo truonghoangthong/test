@@ -14,7 +14,9 @@ urlpatterns = [
     path('get_image/<str:image_name>/', views.get_image_by_name, name='get_image_by_name'),
     path('update_user/<str:user_id>/', views.update_user_info, name='update_user_info'),
     path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('api/csrf_token/', views.get_csrf_token, name='csrf_token'),  # Route để lấy CSRF token
 ]
 

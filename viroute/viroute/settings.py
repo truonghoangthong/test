@@ -176,8 +176,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'lelouchzero093@gmail.com'  # Thay bằng email của bạn
-EMAIL_HOST_PASSWORD = 'yoag nlig okku bryv'  # Mật khẩu của tài khoản Google hoặc app password nếu bật 2FA
+EMAIL_HOST_PASSWORD = 'rdjj izho flpr xoqr'  # Mật khẩu của tài khoản Google hoặc app password nếu bật 2FA
 DEFAULT_FROM_EMAIL = 'lelouchzero093@gmail.com'
+PASSWORD_RESET_FRONTEND_URL = 'http://localhost:5173/reclaimpass'
+
+
 
 
 

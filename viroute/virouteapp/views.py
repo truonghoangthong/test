@@ -17,7 +17,13 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 import yagmail
-from .yagmail_backend import send_reset_email
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+import logging
+from django.utils.timezone import now
+
+logger = logging.getLogger(__name__)
 
 
 # Get route/map API
@@ -145,75 +151,107 @@ def update_user_info(request, user_id):
 
 
 # Forgot password
-import yagmail
+def is_valid_email(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError:
+        return False
 
-# Forgot password
+def send_reset_email(email, reset_link):
+    subject = "Password Reset"
+    message = f"Click the link to reset your password: {reset_link}"
+    from_email = 'your_email@gmail.com'
+
+    try:
+        # Use yagmail to send the reset email
+        yag = yagmail.SMTP(from_email, 'your_email_password')
+        yag.send(to=email, subject=subject, contents=message)
+        logger.info(f"Password reset email sent to {email}")
+    except Exception as e:
+        logger.error(f"Failed to send email to {email}: {e}")
+        raise Exception(f"Failed to send email: {str(e)}")
+
+# Forgot Password API (POST)
 @api_view(['POST'])
 def forgot_password(request):
     try:
-        data = request.data  # Expecting JSON body
-
+        data = request.data
         email = data.get('email')
 
         if not email:
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Kiểm tra xem email có tồn tại trong database không
+        # Validate the email format
+        if not is_valid_email(email):
+            return Response({"error": "Invalid email format."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the email exists
         try:
             user = User.objects.get(userEmail=email)
         except User.DoesNotExist:
-            return Response({"error": "Email not found."}, status=status.HTTP_400_BAD_REQUEST)
+            # Không gửi email nếu email không tồn tại
+            return Response({"message": "If an account exists with this email, a reset link has been sent."}, 
+                             status=status.HTTP_200_OK)  # Trả lời thành công, nhưng không tiết lộ có hay không tài khoản
 
-        # Tạo token và reset link
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(user.pk.encode())
+        # Generate reset token and link
+        token_generator = CustomPasswordResetTokenGenerator()
+        token = token_generator.make_token(user)
+        uid = urlsafe_base64_encode(str(user.pk).encode())
         reset_link = f"http://localhost:5173/reclaimpass/{uid}/{token}/"
 
-        # Gọi hàm gửi email từ yagmail_backend
-        send_reset_email(email, reset_link)
+        # Send the reset email
+        send_reset_email(user.userEmail, reset_link)
+        logger.info(f"Password reset email sent to: {email}")
 
-        return Response({"message": "Password reset link sent."}, status=status.HTTP_200_OK)
+        return Response({"message": "If an account exists with this email, a reset link has been sent."}, 
+                         status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response(
-            {"error": "An error occurred", "details": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        logger.error(f"Error in forgot_password: {e}")
+        return Response({"error": "An error occurred while processing your request."}, 
+                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
-# Reset password
+# Reset Password API (PUT)
 @api_view(['PUT'])
 def reset_password(request, uidb64, token):
+    """
+    Reset password based on the token and UID.
+    """
+    new_password = request.data.get('password')
+
+    if not new_password:
+        return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        data = request.data  # Expecting JSON body
+        # Decode the UID and get the user
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, User.DoesNotExist):
+        return Response({"error": "Invalid link or user not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        new_password = data.get('password')
+    # Verify the token
+    token_generator = CustomPasswordResetTokenGenerator()
+    if not token_generator.check_token(user, token):
+        return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not new_password:
-            return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
+    # Reset the password
+    user.set_password(new_password)
+    user.save()
 
-        try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, User.DoesNotExist):
-            return Response({"error": "Invalid link or user not found."}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "Password successfully updated."}, status=status.HTTP_200_OK)
 
-        if not default_token_generator.check_token(user, token):
-            return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
-
-        user.set_password(new_password)
-        user.save()
-
-        return Response({"message": "Password successfully updated."}, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response(
-            {"error": "An error occurred", "details": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-# View trả về CSRF token
+# CSRF Token API
 @api_view(['GET'])
 def get_csrf_token(request):
-    csrf_token = get_token(request)  # Lấy CSRF token từ middleware
+    csrf_token = get_token(request)  # CSRF token from middleware
     return Response({'csrf_token': csrf_token})
+
+# Custom Password Reset Token Generator
+class CustomPasswordResetTokenGenerator(PasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        # Use current timestamp instead of last_login
+        login_timestamp = now()
+        return f"{user.pk}-{login_timestamp}-{user.email}"
+        
