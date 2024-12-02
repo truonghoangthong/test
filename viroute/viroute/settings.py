@@ -166,7 +166,12 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # CSRF settings
-CSRF_TRUSTED_ORIGINS = [f'http://localhost:{port}' for port in range(3000, 8000)]  
+CSRF_TRUSTED_ORIGINS = [
+    f'http://localhost:{port}' for port in range(3000, 8000)
+] + [
+    'https://test-production-1774.up.railway.app',
+]
+
 CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True  
 
