@@ -3,9 +3,10 @@ from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
 import requests
 from django.conf import settings
+from django.contrib.auth import get_user_model
 import json
 from .models import User, Ticket, Image
-from .serializers import UserLoginSerializer, UserSerializer
+from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -22,6 +23,16 @@ from django.core.validators import validate_email
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import logging
 from django.utils.timezone import now
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from django.template.loader import render_to_string
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import PasswordResetForm
+# Ticket list
+from .models import Ticket, BusRoute
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +88,7 @@ class UserLoginView(APIView):
 def signup(request):
     try:
         data = request.data  # Expecting JSON body
-
         print("Parsed data:", data)
-
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
@@ -104,7 +113,7 @@ def signup(request):
 # Ticket list
 def ticket_list(request):
     tickets = Ticket.objects.all()
-    return render(request, 'virouteapp/ticket_list.html', {'tickets': tickets})
+    return render(request, 'ticket_list.html', {'tickets': tickets})
 
 
 # Get image by name
@@ -149,115 +158,13 @@ def update_user_info(request, user_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-
-def is_valid_email(email):
-    try:
-        validate_email(email)
-        return True
-    except ValidationError:
-        return False
-
-# Hàm gửi email reset mật khẩu
-def send_reset_email(email, reset_link):
-    subject = "Password Reset"
-    message = f"Click the link to reset your password: {reset_link}"
-    from_email = 'lelouchzero093@gmail.com'  # Email gửi từ
-
-    try:
-        # Sử dụng send_mail của Django thay vì yagmail
-        send_mail(
-            subject,
-            message,
-            from_email,
-            [email],
-            fail_silently=False,
-        )
-        logger.info(f"Password reset email sent to {email}")
-    except Exception as e:
-        logger.error(f"Failed to send email to {email}: {e}")
-        raise Exception(f"Failed to send email: {str(e)}")
-
-# API Forgot Password (POST)
-@api_view(['POST'])
-def forgot_password(request):
-    try:
-        data = request.data
-        email = data.get('email')
-
-        if not email:
-            return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Kiểm tra định dạng email
-        if not is_valid_email(email):
-            return Response({"error": "Invalid email format."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Kiểm tra xem email có tồn tại trong hệ thống không
-        try:
-            user = User.objects.get(userEmail=email)
-        except User.DoesNotExist:
-            # Không gửi email nếu email không tồn tại
-            return Response({"message": "If an account exists with this email, a reset link has been sent."}, 
-                             status=status.HTTP_200_OK)  # Trả lời thành công mà không tiết lộ tài khoản
-
-        # Tạo token reset và link
-        token_generator = CustomPasswordResetTokenGenerator()
-        token = token_generator.make_token(user)
-        uid = urlsafe_base64_encode(str(user.pk).encode())
-        reset_link = f"http://localhost:5173/reclaimpass/{uid}/{token}/"
-
-        # Gửi email reset
-        send_reset_email(user.userEmail, reset_link)
-        logger.info(f"Password reset email sent to: {email}")
-
-        return Response({"message": "If an account exists with this email, a reset link has been sent."}, 
-                         status=status.HTTP_200_OK)
-
-    except Exception as e:
-        logger.error(f"Error in forgot_password: {e}")
-        return Response({"error": "An error occurred while processing your request."}, 
-                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# API Reset Password (PUT)
-@api_view(['PUT'])
-def reset_password(request, uidb64, token):
-    """
-    Reset password based on the token and UID.
-    """
-    new_password = request.data.get('password')
-
-    if not new_password:
-        return Response({"error": "Password is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        # Giải mã UID và lấy người dùng
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, User.DoesNotExist):
-        return Response({"error": "Invalid link or user not found."}, status=status.HTTP_404_NOT_FOUND)
-
-    # Kiểm tra token
-    token_generator = CustomPasswordResetTokenGenerator()
-    if not token_generator.check_token(user, token):
-        return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Cập nhật mật khẩu mới
-    user.set_password(new_password)
-    user.save()
-
-    return Response({"message": "Password successfully updated."}, status=status.HTTP_200_OK)
-
-# CSRF Token API
 @api_view(['GET'])
-def get_csrf_token(request):
-    csrf_token = get_token(request)  # CSRF token from middleware
-    return Response({'csrf_token': csrf_token})
+def get_bus_routes(request):
+    bus_routes = BusRoute.objects.all()
+    serializer = BusRouteSerializer(bus_routes, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
-# Custom Password Reset Token Generator
-class CustomPasswordResetTokenGenerator(PasswordResetTokenGenerator):
-    def _make_hash_value(self, user, timestamp):
-        # Sử dụng thời gian hiện tại thay vì last_login
-        login_timestamp = now()
-        return f"{user.pk}-{login_timestamp}-{user.email}"
 
-        
+
+
+

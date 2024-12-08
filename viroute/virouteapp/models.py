@@ -90,3 +90,9 @@ class AccountHasUser(models.Model):
             models.UniqueConstraint(fields=['account', 'user'], name='unique_account_user')
         ]
         
+class BusRoute(models.Model):
+    bus_id = models.CharField(max_length=20, primary_key=True)
+    bus_Name = models.CharField(max_length=100)
+    bus_start = models.CharField(max_length=100)
+    bus_end = models.CharField(max_length=100)
+        

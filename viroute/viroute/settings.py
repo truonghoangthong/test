@@ -174,15 +174,15 @@ CSRF_TRUSTED_ORIGINS = [
 
 CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True  
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
 
-# Email settings using Yagmail
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+EMAIL_PORT = 587  
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'lelouchzero093@gmail.com'  # Thay bằng email của bạn
-EMAIL_HOST_PASSWORD = 'rdjj izho flpr xoqr'  # Mật khẩu của tài khoản Google hoặc app password nếu bật 2FA
-DEFAULT_FROM_EMAIL = 'lelouchzero093@gmail.com'
+EMAIL_HOST_USER = 'banhmingon1000@gmail.com'  
+EMAIL_HOST_PASSWORD = 'gign tnap zmwf yxop'  
+
 
 
 
