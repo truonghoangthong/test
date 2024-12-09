@@ -169,20 +169,21 @@ def get_bus_routes_by_start_and_end(request):
     bus_start = request.GET.get('bus_start', None)
     bus_end = request.GET.get('bus_end', None)
     
-    # Kiểm tra tham số bắt buộc
     if not bus_start or not bus_end:
         return Response(
             {"error": "bus_start and bus_end are required parameters."}, 
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Lọc tuyến xe dựa trên bus_start và bus_end
-    bus_routes = BusRoute.objects.filter(bus_start__icontains=bus_start, bus_end__icontains=bus_end)
+    bus_routes = BusRoute.objects.filter(
+        bus_start__icontains=bus_start, 
+        bus_end__icontains=bus_end
+    )
     
-    # Trả về danh sách bus_name
     bus_names = bus_routes.values_list('bus_Name', flat=True)
     
     return Response({"bus_names": list(bus_names)}, status=status.HTTP_200_OK)
+
 
 
 
