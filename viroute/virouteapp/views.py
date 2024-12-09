@@ -29,6 +29,8 @@ from email.mime.multipart import MIMEMultipart
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordResetForm
+from rest_framework.permissions import IsAuthenticated
+
 # Ticket list
 from .models import Ticket, BusRoute, FavPlace
 
@@ -256,6 +258,12 @@ def get_bus_routes_by_start_and_end(request):
 @api_view(['POST'])
 def create_fav_place(request):
     try:
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Cần xác thực để tạo địa điểm yêu thích."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         if request.content_type == 'application/json':
             data = request.data
         else:
@@ -264,21 +272,26 @@ def create_fav_place(request):
                 data = json.loads(raw_body)
             else:
                 return Response(
-                    {"error": "Invalid content-type or missing data."},
+                    {"error": "Loại nội dung không hợp lệ hoặc thiếu dữ liệu."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+        # Liên kết người dùng đã đăng nhập với địa điểm yêu thích
         data['user'] = request.user.id
+
         serializer = FavPlaceSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save()  # Lưu địa điểm yêu thích
             return Response({
-                "message": "Favorite place created successfully",
-                "fav_bus": serializer.data
+                "message": "Địa điểm yêu thích đã được tạo thành công",
+                "fav_place": serializer.data
             }, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except Exception as e:
         return Response(
-            {"error": "An error occurred", "details": str(e)},
+            {"error": "Đã xảy ra lỗi", "details": str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
         
