@@ -273,14 +273,19 @@ def create_fav_place(request):
             serializer.save()
             return Response({
                 "message": "Favorite place created successfully",
-                "fav_bus": serializer.data
+                "fav_place": serializer.data
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "error": "Validation failed",
+            "details": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     except Exception as e:
-        return Response(
-            {"error": "An error occurred", "details": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({
+            "error": "An error occurred",
+            "details": str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
         
 
 @api_view(['GET'])
