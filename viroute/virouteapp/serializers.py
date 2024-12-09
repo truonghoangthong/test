@@ -1,7 +1,7 @@
 import bcrypt
 from rest_framework import serializers
 from virouteapp.models import User
-from .models import BusRoute
+from .models import BusRoute,FavPlace
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -41,4 +41,9 @@ class UserSerializer(serializers.ModelSerializer): # sign up
 class BusRouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = BusRoute
+        fields = '__all__'
+        
+class FavPlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavPlace
         fields = '__all__'

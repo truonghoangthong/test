@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 import json
 from .models import User, Ticket, Image
-from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer
+from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer, FavPlaceSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -30,7 +30,7 @@ from django.template.loader import render_to_string
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordResetForm
 # Ticket list
-from .models import Ticket, BusRoute
+from .models import Ticket, BusRoute, FavPlace
 
 
 
@@ -253,7 +253,64 @@ def get_bus_routes_by_start_and_end(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['POST'])
+def create_fav_place(request):
+    try:
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
+            else:
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        data['user'] = request.user.id
+        serializer = FavPlaceSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Favorite place created successfully",
+                "fav_bus": serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
 
+@api_view(['GET'])
+def get_fav_place(request, user_id):
+    try:
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
+            else:
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        fav_buses = FavPlace.objects.filter(user__userID=user_id)
+        
+        if not fav_buses:
+            return Response({"message": "No favorite buses found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = FavPlaceSerializer(fav_buses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 

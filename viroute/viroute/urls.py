@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/bus_routes/', views.get_bus_routes, name='get_bus_routes'),
     
     path('api/bus_routes/filter/',views.get_bus_routes_by_start_and_end, name='get_bus_routes_by_start_and_end'),
+    path('fav-place/create/', views.create_fav_place, name='create_fav_place'),
+    path('fav-place/<int:user_id>/', views.get_fav_place, name='get_fav_place'),
 ]
 
 if settings.DEBUG:

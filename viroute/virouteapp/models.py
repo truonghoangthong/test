@@ -73,7 +73,11 @@ class User(models.Model):
             self.userID = birth_date_str + last_four_digits
 
         super().save(*args, **kwargs)
-
+class FavPlace(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    icon = models.CharField(max_length=255,null=False,blank = False)
+    fav_place = models.CharField(max_length=255,null=False,blank = False)
+    name = models.CharField(max_length=255,null=False,blank = False,default='default')
 class UserTicket(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -95,4 +99,5 @@ class BusRoute(models.Model):
     bus_Name = models.CharField(max_length=100)
     bus_start = models.CharField(max_length=100)
     bus_end = models.CharField(max_length=100)
-        
+    
+
