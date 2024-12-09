@@ -54,29 +54,46 @@ def get_route(request):
 class UserLoginView(APIView):
     def post(self, request):
         try:
-            data = request.data  # Expecting JSON body from the client
+            if request.content_type == 'application/json':
+                data = request.data  
+            else:
+                raw_body = request.POST.get('_content')
+                if raw_body:
+                    data = json.loads(raw_body)  
+                else:
+                    return Response(
+                        {"error": "Invalid content-type or missing data."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
-            print("Parsed data:", data)
+            print("Parsed data:", data)  # Log parsed data for debugging
 
+            # Validate the data using the UserLoginSerializer
             serializer = UserLoginSerializer(data=data)
+
             if serializer.is_valid():
+                # If data is valid, retrieve the user from validated data
                 user = serializer.validated_data['user']
+                
+                # Return a successful response with user details
                 return Response({
                     "message": "Login successful",
                     "user": {
                         "userID": user.userID,
                         "fullName": user.fullName,
                         "userEmail": user.userEmail,
-                        "balance": str(user.balance)
+                        "balance": str(user.balance)  # Ensure balance is returned as a string
                     }
                 }, status=status.HTTP_200_OK)
 
+            # If the serializer is not valid, return the errors
             return Response({
                 "message": "Login failed",
                 "errors": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
+            # Catch any unexpected errors and return them in the response
             return Response(
                 {"error": "An error occurred", "details": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -87,8 +104,20 @@ class UserLoginView(APIView):
 @api_view(['POST'])
 def signup(request):
     try:
-        data = request.data  # Expecting JSON body
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
+            else:
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         print("Parsed data:", data)
+
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
@@ -103,6 +132,7 @@ def signup(request):
             }, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except Exception as e:
         return Response(
             {"error": "An error occurred", "details": str(e)},
@@ -133,6 +163,19 @@ def get_image_by_name(request, image_name):
 @api_view(['PUT'])
 def update_user_info(request, user_id):
     try:
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
+            else:
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        print("Parsed data:", data)  
         try:
             user = User.objects.get(userID=user_id)
         except User.DoesNotExist:
@@ -166,29 +209,49 @@ def get_bus_routes(request):
 
 @api_view(['POST'])
 def get_bus_routes_by_start_and_end(request):
-    bus_start = request.data.get('bus_start', None)
-    bus_end = request.data.get('bus_end', None)
-    
-    if not bus_start or not bus_end:
-        return Response(
-            {"error": "bus_start and bus_end are required fields."}, 
-            status=status.HTTP_400_BAD_REQUEST
+    try:
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
+            else:
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        bus_start = data.get('bus_start', None)
+        bus_end = data.get('bus_end', None)
+        
+        if not bus_start or not bus_end:
+            return Response(
+                {"error": "Both 'bus_start' and 'bus_end' are required fields."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        bus_routes = BusRoute.objects.filter(
+            bus_start__icontains=bus_start, 
+            bus_end__icontains=bus_end
         )
+        
+        bus_names = bus_routes.values_list('bus_Name', flat=True)
+        
+        if not bus_names:
+            return Response(
+                {"message": "No bus routes found for the given start and end points."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        return Response({"bus_names": list(bus_names)}, status=status.HTTP_200_OK)
     
-    bus_routes = BusRoute.objects.filter(
-        bus_start__icontains=bus_start, 
-        bus_end__icontains=bus_end
-    )
-    
-    bus_names = bus_routes.values_list('bus_Name', flat=True)
-    
-    if not bus_names:
+    except Exception as e:
+        # Xử lý lỗi chung
         return Response(
-            {"message": "No bus routes found for the given start and end points."}, 
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
-    return Response({"bus_names": list(bus_names)}, status=status.HTTP_200_OK)
 
 
 
