@@ -22,7 +22,9 @@ urlpatterns = [
     
     # Password reset routes
     path('auth/', include('virouteapp.urls')),
-    path('api/bus_routes/', views.get_bus_routes, name='get_bus_routes')
+    path('api/bus_routes/', views.get_bus_routes, name='get_bus_routes'),
+    
+    path('api/bus_routes/filter/',views.get_bus_routes_by_start_and_end, name='get_bus_routes_by_start_and_end'),
 ]
 
 if settings.DEBUG:
