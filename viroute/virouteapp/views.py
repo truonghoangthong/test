@@ -164,14 +164,14 @@ def get_bus_routes(request):
     serializer = BusRouteSerializer(bus_routes, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def get_bus_routes_by_start_and_end(request):
-    bus_start = request.GET.get('bus_start', None)
-    bus_end = request.GET.get('bus_end', None)
+    bus_start = request.data.get('bus_start', None)
+    bus_end = request.data.get('bus_end', None)
     
     if not bus_start or not bus_end:
         return Response(
-            {"error": "bus_start and bus_end are required parameters."}, 
+            {"error": "bus_start and bus_end are required fields."}, 
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -182,7 +182,14 @@ def get_bus_routes_by_start_and_end(request):
     
     bus_names = bus_routes.values_list('bus_Name', flat=True)
     
+    if not bus_names:
+        return Response(
+            {"message": "No bus routes found for the given start and end points."}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
     return Response({"bus_names": list(bus_names)}, status=status.HTTP_200_OK)
+
 
 
 
