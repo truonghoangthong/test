@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -255,53 +255,29 @@ def get_bus_routes_by_start_and_end(request):
         )
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Cho phép tạo fav place mà không yêu cầu đăng nhập
+@permission_classes([IsAuthenticated])  # Bắt buộc user phải đăng nhập
 def create_fav_place(request):
     try:
-        # Kiểm tra content-type và lấy dữ liệu
         if request.content_type == 'application/json':
             data = request.data
         else:
-            raw_body = request.POST.get('_content')
-            if raw_body:
-                data = json.loads(raw_body)
-            else:
-                return Response(
-                    {"error": "Invalid content-type or missing data."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            return Response({"error": "Invalid content-type or missing data."}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Nếu có user_id, gán vào trường user
-        user_id = data.get('user_id', None)
-        if user_id:
-            # Nếu user_id có, gán vào trường user
-            data['user'] = user_id
-        elif request.user.is_authenticated:
-            # Nếu không có user_id, lấy user từ request.user (nếu đã đăng nhập)
-            data['user'] = request.user.id
-        else:
-            return Response(
-                {"error": "User ID is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Lấy user từ request.user (vì đã xác thực người dùng thông qua JWT)
+        user = request.user
         
-        # Tạo serializer và kiểm tra tính hợp lệ
+        # Thêm user vào dữ liệu gửi đi
+        data['user'] = user.id
+        
         serializer = FavPlaceSerializer(data=data)
         if serializer.is_valid():
-            # Lưu vào cơ sở dữ liệu
             serializer.save()
-            return Response({
-                "message": "Favorite place created successfully",
-                "fav_place": serializer.data
-            }, status=status.HTTP_201_CREATED)
+            return Response({"message": "Favorite place created successfully", "fav_place": serializer.data}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        return Response(
-            {"error": "An error occurred", "details": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "An error occurred", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
 

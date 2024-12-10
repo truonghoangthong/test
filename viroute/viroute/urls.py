@@ -5,6 +5,8 @@ from virouteapp import views
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.auth import views as auth_views
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +29,8 @@ urlpatterns = [
     path('api/bus_routes/filter/',views.get_bus_routes_by_start_and_end, name='get_bus_routes_by_start_and_end'),
     path('fav-place/create/', views.create_fav_place, name='create_fav_place'),
     path('fav-place/<int:user_id>/', views.get_fav_place, name='get_fav_place'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
 if settings.DEBUG:
