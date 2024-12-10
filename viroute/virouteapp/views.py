@@ -255,23 +255,28 @@ def get_bus_routes_by_start_and_end(request):
         )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Bắt buộc user phải đăng nhập
+@permission_classes([IsAuthenticated])  # Yêu cầu phải có xác thực JWT
 def create_fav_place(request):
     try:
-        if request.content_type == 'application/json':
-            data = request.data
-        else:
+        if request.content_type != 'application/json':
             return Response({"error": "Invalid content-type or missing data."}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Lấy user từ request.user (vì đã xác thực người dùng thông qua JWT)
-        user = request.user
+        data = request.data
+
+        # Lấy user từ JWT token
+        user = request.user  # Lấy user đã xác thực từ JWT token
         
-        # Thêm user vào dữ liệu gửi đi
+        # Kiểm tra nếu không có dữ liệu user trong request
+        if not user:
+            return Response({"error": "User not authenticated."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Nếu user tồn tại, gán user vào dữ liệu gửi đi
         data['user'] = user.id
-        
+
+        # Dùng serializer để tạo đối tượng FavPlace mới
         serializer = FavPlaceSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save()  # Lưu dữ liệu vào DB
             return Response({"message": "Favorite place created successfully", "fav_place": serializer.data}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
