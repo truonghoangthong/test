@@ -186,14 +186,18 @@ def update_user_info(request, user_id):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        data = request.data  # Expecting JSON body
-
         serializer = UserSerializer(user, data=data, partial=True)
         if serializer.is_valid():
+            # Save the updated user
             serializer.save()
+            
+            # Fetch the updated user to return the latest data
+            updated_user = User.objects.get(userID=user_id)
+            updated_serializer = UserSerializer(updated_user)
+
             return Response({
                 "message": "User updated successfully",
-                "user": serializer.data
+                "user": updated_serializer.data  # Return updated user data
             }, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid data", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
