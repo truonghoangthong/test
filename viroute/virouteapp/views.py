@@ -83,7 +83,8 @@ class UserLoginView(APIView):
                         "fullName": user.fullName,
                         "phoneNumber": str(user.phoneNumber),
                         "userEmail": user.userEmail,
-                        "balance": str(user.balance)  # Ensure balance is returned as a string
+                        "balance": str(user.balance),  # Ensure balance is returned as a string
+                        "avatar": str(user.avatar)
                     }
                 }, status=status.HTTP_200_OK)
 
