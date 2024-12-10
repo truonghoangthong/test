@@ -28,6 +28,8 @@ urlpatterns = [
     path('fav-place/create/', views.create_fav_place, name='create_fav_place'),
     path('fav-place/<int:user_id>/', views.get_fav_place, name='get_fav_place'),
     path('update-avatar/', views.UpdateAvatarView.as_view(), name='update-avatar'),
+    path('get-avatar-url/', views.GetAvatarUrlView.as_view(), name='get-avatar-url'),
+    
 ]
 
 if settings.DEBUG:

@@ -340,3 +340,11 @@ class UpdateAvatarView(APIView):
         
         return Response(serializer.errors, status=400)
 
+class GetAvatarUrlView(APIView):
+    def get(self, request, *args, **kwargs):
+        user = request.user  
+        if user.avatar:
+            avatar_url = f"https://test-production-1774.up.railway.app/media/{user.avatar}"
+            return Response({'avatar_url': avatar_url})
+        
+        return Response({'error': 'No avatar found'}, status=404)
