@@ -81,6 +81,7 @@ class UserLoginView(APIView):
                     "user": {
                         "userID": user.userID,
                         "fullName": user.fullName,
+                        "phoneNumber": user.phoneNumber,
                         "userEmail": user.userEmail,
                         "balance": str(user.balance)  # Ensure balance is returned as a string
                     }
@@ -126,6 +127,7 @@ def signup(request):
                 "user": {
                     "userID": user.userID,
                     "fullName": user.fullName,
+                    "phoneNumber": user.phoneNumber,
                     "userEmail": user.userEmail,
                     "balance": str(user.balance)
                 }
