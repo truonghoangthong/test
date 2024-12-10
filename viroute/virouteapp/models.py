@@ -60,6 +60,7 @@ class User(models.Model):
     tickets = models.ManyToManyField(Ticket, through='UserTicket')
     dateofbirth = models.DateField(null=False, default= '2003-12-15') # should be fixed later
     password = models.CharField(max_length=70,null=False,blank=False)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     def save(self, *args, **kwargs): #Thang Thong chua giai thich cho tao, dit me 
         if not self.userID:
             if isinstance(self.dateofbirth, str):

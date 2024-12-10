@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 import json
 from .models import User, Ticket, Image
-from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer, FavPlaceSerializer
+from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer, FavPlaceSerializer,UpdateAvatarSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -320,6 +320,23 @@ def get_fav_place(request, user_id):
 
 
 
-
-
+class UpdateAvatarView(APIView):
+    def put(self, request, *args, **kwargs):
+        # Lấy user từ `userID` được truyền trong request
+        user_id = request.data.get('userID')
+        if not user_id:
+            return Response({'error': 'userID is required'}, status=400)
+        
+        try:
+            user = User.objects.get(userID=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+        
+        # Xử lý serializer
+        serializer = UpdateAvatarSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Avatar updated successfully!', 'avatar_url': user.avatar.url})
+        
+        return Response(serializer.errors, status=400)
 
