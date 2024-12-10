@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
+from rest_framework.permissions import IsAuthenticated
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -10,7 +11,7 @@ from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from django.shortcuts import get_object_or_404
 import os
 from django.core.mail import send_mail
@@ -254,11 +255,14 @@ def get_bus_routes_by_start_and_end(request):
         )
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Đảm bảo yêu cầu xác thực người dùng
 def create_fav_place(request):
     try:
+        # Nếu content-type là application/json
         if request.content_type == 'application/json':
             data = request.data
         else:
+            # Nếu content-type khác, lấy raw body
             raw_body = request.POST.get('_content')
             if raw_body:
                 data = json.loads(raw_body)
@@ -267,25 +271,27 @@ def create_fav_place(request):
                     {"error": "Invalid content-type or missing data."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        
+        # Gán trường 'user' cho fav place từ người dùng đã xác thực
         data['user'] = request.user.id
+        
+        # Tạo serializer và kiểm tra tính hợp lệ
         serializer = FavPlaceSerializer(data=data)
         if serializer.is_valid():
+            # Lưu dữ liệu vào cơ sở dữ liệu
             serializer.save()
             return Response({
                 "message": "Favorite place created successfully",
                 "fav_place": serializer.data
             }, status=status.HTTP_201_CREATED)
-
-        return Response({
-            "error": "Validation failed",
-            "details": serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     except Exception as e:
-        return Response({
-            "error": "An error occurred",
-            "details": str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
         
 
 @api_view(['GET'])
