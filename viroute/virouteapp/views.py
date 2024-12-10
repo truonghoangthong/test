@@ -258,11 +258,10 @@ def get_bus_routes_by_start_and_end(request):
 @permission_classes([AllowAny])  # Cho phép tạo fav place mà không yêu cầu đăng nhập
 def create_fav_place(request):
     try:
-        # Nếu content-type là application/json
+        # Kiểm tra content-type và lấy dữ liệu
         if request.content_type == 'application/json':
             data = request.data
         else:
-            # Nếu content-type khác, lấy raw body
             raw_body = request.POST.get('_content')
             if raw_body:
                 data = json.loads(raw_body)
@@ -272,9 +271,15 @@ def create_fav_place(request):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-        # Lấy thông tin user_id từ request nếu có, nếu không gán mặc định
+        # Nếu có user_id, gán vào trường user
         user_id = data.get('user_id', None)
-        if not user_id:
+        if user_id:
+            # Nếu user_id có, gán vào trường user
+            data['user'] = user_id
+        elif request.user.is_authenticated:
+            # Nếu không có user_id, lấy user từ request.user (nếu đã đăng nhập)
+            data['user'] = request.user.id
+        else:
             return Response(
                 {"error": "User ID is required."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -283,7 +288,7 @@ def create_fav_place(request):
         # Tạo serializer và kiểm tra tính hợp lệ
         serializer = FavPlaceSerializer(data=data)
         if serializer.is_valid():
-            # Lưu dữ liệu vào cơ sở dữ liệu
+            # Lưu vào cơ sở dữ liệu
             serializer.save()
             return Response({
                 "message": "Favorite place created successfully",
