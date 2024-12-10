@@ -46,5 +46,5 @@ class BusRouteSerializer(serializers.ModelSerializer):
 class FavPlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavPlace
-        fields = ['name', 'fav_place', 'icon', 'user_id']  
-        read_only_fields = ['user_id']
+        fields = ['name', 'fav_place', 'icon', 'user']  
+        read_only_fields = ['user']

@@ -273,7 +273,7 @@ def create_fav_place(request):
                 )
         
         # Lấy thông tin user_id từ request nếu có, nếu không gán mặc định
-        user_id = data.get('user_id', None)
+        user_id = data.get('user', None)
         if not user_id:
             return Response(
                 {"error": "User ID is required."},
