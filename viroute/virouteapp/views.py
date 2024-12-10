@@ -31,7 +31,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import PasswordResetForm
 # Ticket list
 from .models import Ticket, BusRoute, FavPlace
-from uuid import uuid4
 
 
 
@@ -324,34 +323,22 @@ def get_fav_place(request, user_id):
 
 class UpdateAvatarView(APIView):
     def put(self, request, *args, **kwargs):
+        # Lấy user từ `userID` được truyền trong request
         user_id = request.data.get('userID')
         if not user_id:
             return Response({'error': 'userID is required'}, status=400)
-
+        
         try:
             user = User.objects.get(userID=user_id)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=404)
-
-        if 'avatar' not in request.FILES:
-            return Response({'error': 'Avatar file is required'}, status=400)
-
-        avatar_file = request.FILES['avatar']
-
-        file_extension = os.path.splitext(avatar_file.name)[1]  
-        new_file_name = f"{uuid4()}{file_extension}" 
-        avatar_file.name = new_file_name
-
-        if user.avatar:
-            old_avatar_path = user.avatar.path
-            if os.path.exists(old_avatar_path):
-                os.remove(old_avatar_path)
-
-        user.avatar = avatar_file
-        user.save()
-
-        avatar_url = f"https://test-production-1774.up.railway.app/media/{user.avatar}"
-        return Response({'message': 'Avatar updated successfully!', 'avatar_url': avatar_url})
+        
+        serializer = UpdateAvatarSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Avatar updated successfully!', 'avatar_url': user.avatar.url})
+        
+        return Response(serializer.errors, status=400)
 
 class GetAvatarUrlView(APIView):
     def get(self, request, *args, **kwargs):
