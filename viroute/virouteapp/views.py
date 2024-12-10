@@ -86,7 +86,7 @@ class UserLoginView(APIView):
                 return Response({
                     "message": "Login successful",
                     "user": {
-                        "userID": user.userID,
+                        "userID": user.userID,  # Sử dụng user.userID thay vì user.id
                         "fullName": user.fullName,
                         "userEmail": user.userEmail,
                         "balance": str(user.balance)  # Đảm bảo balance là dạng string
