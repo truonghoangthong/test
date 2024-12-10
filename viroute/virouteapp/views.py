@@ -55,49 +55,64 @@ def get_route(request):
 class UserLoginView(APIView):
     def post(self, request):
         try:
+            # Kiểm tra xem content-type có phải là 'application/json' không
             if request.content_type == 'application/json':
                 data = request.data  
             else:
+                # Nếu không phải application/json, lấy raw body
                 raw_body = request.POST.get('_content')
                 if raw_body:
-                    data = json.loads(raw_body)  
+                    data = json.loads(raw_body)
                 else:
                     return Response(
                         {"error": "Invalid content-type or missing data."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-            print("Parsed data:", data)  # Log parsed data for debugging
+            print("Parsed data:", data)  # Log parsed data cho việc debug
 
-            # Validate the data using the UserLoginSerializer
+            # Validate dữ liệu đầu vào bằng UserLoginSerializer
             serializer = UserLoginSerializer(data=data)
 
             if serializer.is_valid():
-                # If data is valid, retrieve the user from validated data
+                # Nếu dữ liệu hợp lệ, lấy thông tin user từ validated data
                 user = serializer.validated_data['user']
-                
-                # Return a successful response with user details
+
+                # Tạo JWT token cho người dùng
+                from rest_framework_simplejwt.tokens import RefreshToken
+                refresh = RefreshToken.for_user(user)
+
+                # Trả về thông tin người dùng và token
                 return Response({
                     "message": "Login successful",
                     "user": {
                         "userID": user.userID,
                         "fullName": user.fullName,
                         "userEmail": user.userEmail,
-                        "balance": str(user.balance)  # Ensure balance is returned as a string
-                    }
+                        "balance": str(user.balance)  # Đảm bảo balance là dạng string
+                    },
+                    "access_token": str(refresh.access_token),  # Trả về access token
+                    "refresh_token": str(refresh),  # Trả về refresh token
                 }, status=status.HTTP_200_OK)
 
-            # If the serializer is not valid, return the errors
+            # Nếu dữ liệu không hợp lệ, trả về lỗi
             return Response({
                 "message": "Login failed",
                 "errors": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        except ValidationError as e:
+            # Nếu có lỗi trong việc validate dữ liệu
+            return Response(
+                {"error": "Validation failed", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         except Exception as e:
-            # Catch any unexpected errors and return them in the response
+            # Xử lý các lỗi không mong đợi
             return Response(
                 {"error": "An error occurred", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
