@@ -273,7 +273,7 @@ def create_fav_place(request):
                 )
         
         # Gán trường 'user' cho fav place từ người dùng đã xác thực
-        data['user'] = request.user.id
+        data['user_id'] = request.user.id
         
         # Tạo serializer và kiểm tra tính hợp lệ
         serializer = FavPlaceSerializer(data=data)
