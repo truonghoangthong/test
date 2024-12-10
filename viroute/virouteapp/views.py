@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -255,7 +255,7 @@ def get_bus_routes_by_start_and_end(request):
         )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Đảm bảo yêu cầu xác thực người dùng
+@permission_classes([AllowAny])  # Đảm bảo yêu cầu xác thực người dùng
 def create_fav_place(request):
     try:
         # Nếu content-type là application/json
