@@ -127,7 +127,7 @@ def signup(request):
                 "user": {
                     "userID": user.userID,
                     "fullName": user.fullName,
-                    "phoneNumber": user.phoneNumber,
+                    "phoneNumber": str(user.phoneNumber),
                     "userEmail": user.userEmail,
                     "balance": str(user.balance)
                 }
