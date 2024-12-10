@@ -255,7 +255,7 @@ def get_bus_routes_by_start_and_end(request):
         )
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Đảm bảo yêu cầu xác thực người dùng
+@permission_classes([AllowAny])  # Cho phép tạo fav place mà không yêu cầu đăng nhập
 def create_fav_place(request):
     try:
         # Nếu content-type là application/json
@@ -272,8 +272,13 @@ def create_fav_place(request):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-        # Gán trường 'user' cho fav place từ người dùng đã xác thực
-        data['user_id'] = request.user.id
+        # Lấy thông tin user_id từ request nếu có, nếu không gán mặc định
+        user_id = data.get('user_id', None)
+        if not user_id:
+            return Response(
+                {"error": "User ID is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Tạo serializer và kiểm tra tính hợp lệ
         serializer = FavPlaceSerializer(data=data)
@@ -292,6 +297,7 @@ def create_fav_place(request):
             {"error": "An error occurred", "details": str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
+
         
 
 @api_view(['GET'])

@@ -74,7 +74,7 @@ class User(models.Model):
 
         super().save(*args, **kwargs)
 class FavPlace(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     icon = models.CharField(max_length=255,null=False,blank = False)
     fav_place = models.CharField(max_length=255,null=False,blank = False)
     name = models.CharField(max_length=255,null=False,blank = False,default='default')
