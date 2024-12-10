@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.middleware.csrf import get_token
 from django.http import HttpResponse, JsonResponse
-from rest_framework.permissions import IsAuthenticated
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,7 +10,7 @@ from .serializers import UserLoginSerializer, UserSerializer, BusRouteSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 import os
 from django.core.mail import send_mail
@@ -55,60 +54,50 @@ def get_route(request):
 class UserLoginView(APIView):
     def post(self, request):
         try:
-            # Kiểm tra xem content-type có phải là 'application/json' không
             if request.content_type == 'application/json':
-                data = request.data
+                data = request.data  
             else:
                 raw_body = request.POST.get('_content')
                 if raw_body:
-                    data = json.loads(raw_body)
+                    data = json.loads(raw_body)  
                 else:
                     return Response(
                         {"error": "Invalid content-type or missing data."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-            print("Parsed data:", data)  # Log parsed data cho việc debug
+            print("Parsed data:", data)  # Log parsed data for debugging
 
-            # Validate dữ liệu đầu vào
+            # Validate the data using the UserLoginSerializer
             serializer = UserLoginSerializer(data=data)
 
             if serializer.is_valid():
+                # If data is valid, retrieve the user from validated data
                 user = serializer.validated_data['user']
-
-                # Tạo JWT token cho người dùng
-                from rest_framework_simplejwt.tokens import RefreshToken
-                refresh = RefreshToken.for_user(user)
-
+                
+                # Return a successful response with user details
                 return Response({
                     "message": "Login successful",
                     "user": {
-                        "userID": user.userID,  # Sử dụng user.userID thay vì user.id
+                        "userID": user.userID,
                         "fullName": user.fullName,
                         "userEmail": user.userEmail,
-                        "balance": str(user.balance)  # Đảm bảo balance là dạng string
-                    },
-                    "access_token": str(refresh.access_token),  # Trả về access token
-                    "refresh_token": str(refresh),  # Trả về refresh token
+                        "balance": str(user.balance)  # Ensure balance is returned as a string
+                    }
                 }, status=status.HTTP_200_OK)
 
+            # If the serializer is not valid, return the errors
             return Response({
                 "message": "Login failed",
                 "errors": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        except ValidationError as e:
-            return Response(
-                {"error": "Validation failed", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         except Exception as e:
+            # Catch any unexpected errors and return them in the response
             return Response(
                 {"error": "An error occurred", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_400_BAD_REQUEST
             )
-
 
 
 # Sign up
@@ -265,35 +254,33 @@ def get_bus_routes_by_start_and_end(request):
         )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Yêu cầu phải có xác thực JWT
 def create_fav_place(request):
     try:
-        if request.content_type != 'application/json':
-            return Response({"error": "Invalid content-type or missing data."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        data = request.data
-
-        # Lấy user từ JWT token
-        user = request.user  # Lấy user đã xác thực từ JWT token
-        
-        # Kiểm tra nếu không có dữ liệu user trong request
-        if not user:
-            return Response({"error": "User not authenticated."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Nếu user tồn tại, gán user vào dữ liệu gửi đi
-        data['user'] = user.id
-
-        # Dùng serializer để tạo đối tượng FavPlace mới
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            raw_body = request.POST.get('_content')
+            if raw_body:
+                data = json.loads(raw_body)
+            else:
+                return Response(
+                    {"error": "Invalid content-type or missing data."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        data['user'] = request.user.id
         serializer = FavPlaceSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()  # Lưu dữ liệu vào DB
-            return Response({"message": "Favorite place created successfully", "fav_place": serializer.data}, status=status.HTTP_201_CREATED)
-        
+            serializer.save()
+            return Response({
+                "message": "Favorite place created successfully",
+                "fav_bus": serializer.data
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
     except Exception as e:
-        return Response({"error": "An error occurred", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        return Response(
+            {"error": "An error occurred", "details": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
         
 
 @api_view(['GET'])
